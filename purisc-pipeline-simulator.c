@@ -245,17 +245,58 @@ void run(int length, int* m, int limit) {
                 
         }
 }
+void print_usage(char * progname){
+        fprintf(stderr, "usage: %s [options] filename \n", progname);
+        fprintf(stderr, "\nOPTIONS:\n"
+                        "\t-f FORMAT\n\t\teither csv, table, or colortable\n"
+                        "\t-l LIMIT\n\t\ta positive integer specifying the number of cycles to run for. default=20\n");
+}
 int main(int argc, char* argv[]) 
 {
         int limit = 20; // default value
-        if(argc < 2) {
-                fprintf(stderr, "usage: ./%s filename [exec limit]\n", argv[0]);
+        char * format = NULL;
+        char * fname = NULL;
+        if(argc == 1) {
+                print_usage(argv[0]);
                 return(1);
-        } else if(argc == 3) {
-                limit = atoi(argv[2]);
+        } else if(argc > 1) {
+                for(int i = 1; i < argc; i++){
+                        if(argv[i][0] != '-') {
+                                fname=malloc(strlen(argv[i]));
+                                strcpy(fname, argv[i]);
+                        } else if(argv[i][1] == 'f') {
+                                if(i+1 == argc || argv[i+1][0] == '-') {
+                                        print_usage(argv[0]);
+                                        return(1);
+                                }
+                                format=malloc(strlen(argv[i+1]));
+                                strcpy(format, argv[i+1]);
+                                i++;
+                        } else if(argv[i][1] == 'l') {
+                                if(i+1 == argc || argv[i+1][0] == '-') {
+                                        print_usage(argv[0]);
+                                        return(1);
+                                }
+                                limit = atoi(argv[i+1]);
+                                i++;
+                        } else {
+                                print_usage(argv[0]);
+                                return(1);
+                        }
+                }
         }
-        
-        FILE * slqFile = fopen(argv[1], "r");
+        if(fname == NULL) {
+                print_usage(argv[0]);
+                return(1);
+        }
+        if(format == NULL) {
+                format=malloc(strlen("colortable")+1);
+                strcpy(format,"colortable");
+        } else if(strcmp("colortable",format) && strcmp("table",format) && strcmp("csv",format)) {
+                print_usage(argv[0]);
+                return(1);
+        }
+        FILE * slqFile = fopen(fname, "r");
         int * memory = malloc( sizeof(int)*PROGRAM_SIZE );
         int length = 0;
         int valueRead;
@@ -267,6 +308,9 @@ int main(int argc, char* argv[])
         
         run(length, memory, limit);
         
+        if(format == NULL) free(format);
+        if(fname == NULL) free(fname);
+
         return 0;
 }
 
