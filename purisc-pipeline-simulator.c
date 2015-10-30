@@ -111,12 +111,26 @@ void ex_shiftin(stage_ex_t * stage_ex, int data, int addr, int en) {
         if(initCount != 1) 
                 initCount = 1;
 }
-
-void print_header() {
+void print_csv_header() {
+    printf("LS,pa,pb,pc,a,b,c,ra0,ra1,rd0,rd1,we,wad,wdat\n");
+}
+void print_csv_row(stage_ri_t* stage_ri, stage_rd_t* stage_rd, stage_ex_t* stage_ex, 
+                int pc, int c, int fwd)
+{
+        printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                c,
+                stage_ri[0].r_addr_a, stage_ri[0].r_addr_b, stage_ri[0].r_addr_c,
+                stage_ri[0].r_data_a, stage_ri[0].r_data_b, stage_ri[0].r_data_c,
+                stage_rd[1].r_addr_0, stage_rd[1].r_addr_1, 
+                stage_rd[1].r_data_0, stage_rd[1].r_data_1,
+                stage_ex[2].we,       stage_ex[2].w_data,   stage_ex[2].w_addr
+        );
+}
+void print_table_header() {
         printf("  LS |   pa   pb   pc |    a    b    c |  ra 0 ra 1|   rd 0   r"
                         "d 1|   we  wad wdat\n\n");
 }
-void print_row(stage_ri_t* stage_ri, stage_rd_t* stage_rd, stage_ex_t* stage_ex, 
+void print_table_row(stage_ri_t* stage_ri, stage_rd_t* stage_rd, stage_ex_t* stage_ex, 
                 int pc, int c, int fwd)
 {
         char cc1[16], cc2[16], cc3[16], cc4[16]; //colour of each column in this particular row
@@ -159,7 +173,7 @@ void print_row(stage_ri_t* stage_ri, stage_rd_t* stage_rd, stage_ex_t* stage_ex,
         );
         printf("%s\n", row);
 }
-void run(int length, int* m, int limit) {
+void run(int length, int* m, int limit, char* format) {
         stage_ri_t *stage_ri;    
         stage_rd_t *stage_rd; 
         stage_ex_t *stage_ex; 
@@ -174,7 +188,11 @@ void run(int length, int* m, int limit) {
         char cbranch_count = 0;
         int cbranch_addr;
         int fwd;
-        print_header();
+        if(strcmp("table", format) == 0) {
+            print_table_header();
+        } else if(strcmp("csv",format) == 0) {
+            print_csv_header();
+        }
         //loop through instructions, count cycles w/ c
         for(int pc=0, count=0; pc < length && count < limit; count++) 
         {
@@ -230,8 +248,11 @@ void run(int length, int* m, int limit) {
                 {
                         fwd = 2;
                 }
-                
-                print_row(stage_ri, stage_rd, stage_ex, pc, count, fwd);
+                if(strcmp("table", format) == 0) { 
+                    print_table_row(stage_ri, stage_rd, stage_ex, pc, count, fwd);
+                } else if (strcmp("csv", format) == 0) {
+                    print_csv_row(stage_ri, stage_rd, stage_ex, pc, count, fwd);
+                }
 //printf(" %d %d", ubranch_count, cbranch_count);
 //printf("\n");
                 if(cbranch_count == 1) {
@@ -248,7 +269,7 @@ void run(int length, int* m, int limit) {
 void print_usage(char * progname){
         fprintf(stderr, "usage: %s [options] filename \n", progname);
         fprintf(stderr, "\nOPTIONS:\n"
-                        "\t-f FORMAT\n\t\teither csv, table, or colortable\n"
+                        "\t-f FORMAT\n\t\teither csv or table\n"
                         "\t-l LIMIT\n\t\ta positive integer specifying the number of cycles to run for. default=20\n");
 }
 int main(int argc, char* argv[]) 
@@ -290,9 +311,9 @@ int main(int argc, char* argv[])
                 return(1);
         }
         if(format == NULL) {
-                format=malloc(strlen("colortable")+1);
-                strcpy(format,"colortable");
-        } else if(strcmp("colortable",format) && strcmp("table",format) && strcmp("csv",format)) {
+                format=malloc(strlen("table")+1);
+                strcpy(format,"table");
+        } else if(strcmp("table",format) && strcmp("csv",format)) {
                 print_usage(argv[0]);
                 return(1);
         }
@@ -306,7 +327,7 @@ int main(int argc, char* argv[])
         }
         fclose(slqFile);
         
-        run(length, memory, limit);
+        run(length, memory, limit, format);
         
         if(format == NULL) free(format);
         if(fname == NULL) free(fname);
