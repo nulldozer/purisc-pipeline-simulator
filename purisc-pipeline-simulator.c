@@ -191,7 +191,8 @@ void run(int length, int* m, int limit, char* format) {
         if(strcmp("table", format) == 0) {
             print_table_header();
         } else if(strcmp("csv",format) == 0) {
-            print_csv_header();
+            // Don't print the header, this just makes verification harder
+            //print_csv_header();
         }
         //loop through instructions, count cycles w/ c
         for(int pc=0, count=0; pc < length && count < limit; count++) 
