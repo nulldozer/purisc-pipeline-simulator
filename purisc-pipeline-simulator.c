@@ -16,7 +16,7 @@
 #define ANSI_COLOR_NEGATIVE   "\x1b[7m"
 
 #define VERBOSE 1
-#define PROGRAM_SIZE 8192
+#define MAX_MEMORY_ADDRESS 0x00011FFF
 #define dontcare "x              "
 
 #define NOCOLOR 0
@@ -319,7 +319,8 @@ int main(int argc, char* argv[])
                 return(1);
         }
         FILE * slqFile = fopen(fname, "r");
-        int * memory = malloc( sizeof(int)*PROGRAM_SIZE );
+        int * memory = malloc( sizeof(int)*MAX_MEMORY_ADDRESS );
+        memset(memory,0,MAX_MEMORY_ADDRESS+1);
         int length = 0;
         int valueRead;
         for(int i = 0; fscanf(slqFile,"%i",&valueRead) != EOF; i++) {
