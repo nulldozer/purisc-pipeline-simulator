@@ -173,7 +173,8 @@ void print_table_row(stage_ri_t* stage_ri, stage_rd_t* stage_rd, stage_ex_t* sta
         );
         printf("%s\n", row);
 }
-void run(int length, int* m, int limit, char* format) {
+void run(int length, int* m, int limit, int start_addr, char* format) {
+printf("RUN, start_addr:%d\n", start_addr);
         stage_ri_t *stage_ri;    
         stage_rd_t *stage_rd; 
         stage_ex_t *stage_ex; 
@@ -195,7 +196,7 @@ void run(int length, int* m, int limit, char* format) {
             //print_csv_header();
         }
         //loop through instructions, count cycles w/ c
-        for(int pc=0, count=0; pc < length && count < limit; count++) 
+        for(int pc=start_addr, count=0; pc < length && count < limit; count++) 
         {
                 int a = m[pc], b = m[pc+1], c = m[pc+2];
                 int da = m[a], db = m[b];
@@ -275,7 +276,7 @@ void print_usage(char * progname){
 }
 int main(int argc, char* argv[]) 
 {
-        int limit = 20; // default value
+        int limit=20, start_addr=0; // default values
         char * format = NULL;
         char * fname = NULL;
         if(argc == 1) {
@@ -300,6 +301,13 @@ int main(int argc, char* argv[])
                                         return(1);
                                 }
                                 limit = atoi(argv[i+1]);
+                                i++;
+                        } else if(argv[i][1] == 's') {
+                                if(i+1 == argc || argv[i+1][0] == '-') {
+                                        print_usage(argv[0]);
+                                        return(1);
+                                }
+                                start_addr = atoi(argv[i+1]);
                                 i++;
                         } else {
                                 print_usage(argv[0]);
@@ -329,7 +337,7 @@ int main(int argc, char* argv[])
         }
         fclose(slqFile);
         
-        run(length, memory, limit, format);
+        run(length, memory, limit, start_addr, format);
         
         if(format == NULL) free(format);
         if(fname == NULL) free(fname);
